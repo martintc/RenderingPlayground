@@ -20,6 +20,8 @@ const uint32_t HEIGHT = 600;
 const uint32_t WIDTH = 800;
 const char *TITLE = "OpenGL Window";
 
+vec3 player_position = {0.0f, 0.0f, 0.0f};
+
 /* Shaders */
 const char *vertexShaderSource =
     "#version 460 core\n"
@@ -52,7 +54,7 @@ GLFWwindow* window;
 
 /* Forward declaration of functions */
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
-void processInput(GLFWwindow *window);
+void processInput(GLFWwindow *window, float camera_speed);
 void Destroy(GLFWwindow* window);
 
 int main(void) {
@@ -231,10 +233,22 @@ int main(void) {
   vec3 cameraPos = { 0.0f, 0.0f, 3.0f };
   vec3 cmameraTarget = { 0.0f, 0.0f, 0.0f };
   vec3 cameraDirection;
+
+  /* speed */
+  float delta_time = 0.0f;
+  float last_frame = 0.0f;
+  float current_frame = 0.0f;
+  float camera_speed = 0.0f;
   
   while(!glfwWindowShouldClose(window)) {
+    // time stuff
+    current_frame = glfwGetTime();
+    delta_time = current_frame - last_frame;
+    last_frame = current_frame;
+    camera_speed = 2.5f * delta_time;
+    
     // process some input
-    processInput(window);
+    processInput(window, camera_speed);
 
     glUseProgram(shaderProgram);
 
@@ -258,8 +272,8 @@ int main(void) {
     glm_rotate(model, rotation, (vec3){ 1.0f, 1.0f, 1.0f });
 
     // math for view
-    vec3 translate_vector = { 0.0f, 0.0f, -10.0f };
-    glm_translate_to(view, translate_vector, view);
+    /* vec3 translate_vector = { 0.0f, 0.0f, -10.0f }; */
+    glm_translate_to(view, player_position, view);
 
     // math for projection
     glm_perspective(glm_rad(45.0f), (float)WIDTH/(float)HEIGHT, 0.1f, 100.0f, projection);
@@ -290,7 +304,6 @@ int main(void) {
     // check and call events and swap the buffers
     glfwPollEvents();
     glfwSwapBuffers(window);
-    
   }
 
   glDeleteVertexArrays(1, &VAO);
@@ -306,9 +319,26 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
   glViewport(0, 0, width, height);
 }
 
-void processInput(GLFWwindow* window) {
+void processInput(GLFWwindow* window, float camera_speed) {
   if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, TRUE);
+  }
+  if(glfwGetKey(window, GLFW_KEY_A)) {
+    player_position[0] += camera_speed;
+  }
+  if(glfwGetKey(window, GLFW_KEY_D)) {
+    player_position[0] -= camera_speed;
+  }
+  if(glfwGetKey(window, GLFW_KEY_W)){
+    player_position[2] += camera_speed;
+  }
+  if(glfwGetKey(window, GLFW_KEY_S)) {
+    player_position[2] -= camera_speed;
+  }
+  if(glfwGetKey(window, GLFW_KEY_R)) {
+    player_position[0] = 0;
+    player_position[1] = 0;
+    player_position[2] = 0;
   }
 }
 
@@ -316,3 +346,4 @@ void Destroy(GLFWwindow* window) {
   glfwDestroyWindow(window);
   glfwTerminate();
 }
+
